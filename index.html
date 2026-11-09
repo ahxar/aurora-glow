@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aurora Glow</title>
+<style>
+  :root { --bg:#07070d; --fg:#eef0ff; --muted:#9aa0c3; }
+  * { box-sizing:border-box; margin:0; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--fg); font-family:system-ui,-apple-system,sans-serif; overflow-x:hidden; }
+  canvas#bg { position:fixed; inset:0; z-index:-1; }
+  nav { position:fixed; top:0; width:100%; display:flex; justify-content:space-between; align-items:center;
+        padding:20px 6vw; backdrop-filter:blur(10px); z-index:10; }
+  nav b { letter-spacing:.2em; }
+  nav a { color:var(--muted); text-decoration:none; margin-left:24px; transition:color .3s; }
+  nav a:hover { color:var(--fg); }
+  header { min-height:100vh; display:grid; place-content:center; text-align:center; padding:0 6vw; }
+  h1 { font-size:clamp(3rem,10vw,8rem); line-height:1;
+       background:linear-gradient(90deg,#7c5cff,#00e0ff,#ff5ccd,#7c5cff); background-size:300% 100%;
+       -webkit-background-clip:text; background-clip:text; color:transparent; animation:flow 6s linear infinite; }
+  @keyframes flow { to { background-position:300% 0; } }
+  header p { color:var(--muted); margin:24px auto 36px; max-width:34ch; font-size:1.2rem;
+             animation:rise 1s .3s both; }
+  h1 { animation:flow 6s linear infinite, rise 1s both; }
+  @keyframes rise { from { opacity:0; transform:translateY(30px); } }
+  .btn { display:inline-block; padding:14px 32px; border-radius:99px; color:#fff; text-decoration:none;
+         background:linear-gradient(135deg,#7c5cff,#00c8ff); box-shadow:0 0 0 0 #7c5cff88;
+         animation:pulse 2.4s infinite, rise 1s .6s both; transition:transform .2s; }
+  .btn:hover { transform:scale(1.08); }
+  @keyframes pulse { 70% { box-shadow:0 0 0 22px #7c5cff00; } }
+  section { padding:12vh 6vw; max-width:1100px; margin:auto; }
+  h2 { font-size:2.2rem; margin-bottom:40px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:24px; }
+  .card { padding:32px; border-radius:20px; background:#ffffff0a; border:1px solid #ffffff18;
+          transition:transform .3s, border-color .3s; transform-style:preserve-3d; }
+  .card:hover { border-color:#7c5cff; }
+  .card span { font-size:2rem; }
+  .card h3 { margin:14px 0 8px; }
+  .card p { color:var(--muted); line-height:1.5; }
+  .reveal { opacity:0; transform:translateY(50px); transition:opacity .8s, transform .8s; }
+  .reveal.show { opacity:1; transform:none; }
+  footer { text-align:center; color:var(--muted); padding:60px 0; }
+  @media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<nav><b>AURORA</b><div><a href="#features">Features</a><a href="#contact">Contact</a></div></nav>
+
+<header>
+  <h1>Aurora</h1>
+  <p>A simple site with glowing, living motion.</p>
+  <div><a class="btn" href="#features">Explore</a></div>
+</header>
+
+<section id="features">
+  <h2 class="reveal">Features</h2>
+  <div class="grid">
+    <div class="card reveal"><span>⚡</span><h3>Fast</h3><p>One file, no dependencies, instant load.</p></div>
+    <div class="card reveal"><span>🎨</span><h3>Vivid</h3><p>Animated gradients and a particle network that follows your mouse.</p></div>
+    <div class="card reveal"><span>📱</span><h3>Responsive</h3><p>Looks great on any screen size.</p></div>
+  </div>
+</section>
+
+<section id="contact" style="text-align:center">
+  <h2 class="reveal">Say hello</h2>
+  <a class="btn reveal" href="mailto:hello@example.com">hello@example.com</a>
+</section>
+<footer>© 2026 Aurora</footer>
+
+<script>
+// Particle network
+const c = document.getElementById('bg'), x = c.getContext('2d');
+let W, H, pts = [], mouse = {x:-999, y:-999};
+function size(){ W = c.width = innerWidth; H = c.height = innerHeight;
+  pts = Array.from({length: Math.min(110, W*H/14000|0)}, () => ({
+    x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-.5)*.6, vy:(Math.random()-.5)*.6 })); }
+addEventListener('resize', size); size();
+addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+(function loop(t){
+  x.clearRect(0,0,W,H);
+  const hue = (t/30) % 360;
+  for (const p of pts){
+    p.x += p.vx; p.y += p.vy;
+    if (p.x<0||p.x>W) p.vx*=-1; if (p.y<0||p.y>H) p.vy*=-1;
+    const dx = p.x-mouse.x, dy = p.y-mouse.y, d = Math.hypot(dx,dy);
+    if (d<120){ p.x += dx/d*2; p.y += dy/d*2; }
+    x.fillStyle = `hsl(${hue},90%,70%)`; x.beginPath(); x.arc(p.x,p.y,2,0,7); x.fill();
+  }
+  for (let i=0;i<pts.length;i++) for (let j=i+1;j<pts.length;j++){
+    const d = Math.hypot(pts[i].x-pts[j].x, pts[i].y-pts[j].y);
+    if (d<130){ x.strokeStyle = `hsla(${hue},90%,70%,${1-d/130})`; x.beginPath();
+      x.moveTo(pts[i].x,pts[i].y); x.lineTo(pts[j].x,pts[j].y); x.stroke(); }
+  }
+  requestAnimationFrame(loop);
+})(0);
+
+// Scroll reveal
+const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('show')), {threshold:.2});
+document.querySelectorAll('.reveal').forEach((el,i) => { el.style.transitionDelay = (i%3)*.12+'s'; io.observe(el); });
+
+// Card tilt
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX-r.left)/r.width-.5, py = (e.clientY-r.top)/r.height-.5;
+    card.style.transform = `perspective(600px) rotateY(${px*14}deg) rotateX(${-py*14}deg) translateY(-4px)`;
+  });
+  card.addEventListener('mouseleave', () => card.style.transform = '');
+});
+</script>
+</body>
+</html>
